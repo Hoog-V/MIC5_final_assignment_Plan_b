@@ -1,16 +1,13 @@
 #ifndef DISPLAY_HELPER_H
 #define DISPLAY_HELPER_H
 
+
+#include "board_definitions.hpp"
 #include "hardware/spi.h"
 #include "hardware/pwm.h"
 #include "hardware/gpio.h"
 
-#define DISPLAY_BL 7
-#define DISPLAY_RST 6
-#define DISPLAY_DC 4
-#define DISPLAY_CS 5
-#define DISPLAY_SCK 2
-#define DISPLAY_MOSI 3
+
 
 void display_init_backlight() {
     pwm_config cfg = pwm_get_default_config();
@@ -109,11 +106,11 @@ uint8_t u8x8_byte_hw_spi(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_p
   switch(msg) {
     case U8X8_MSG_BYTE_SEND:
       data = (uint8_t *)arg_ptr;
-      spi_write_blocking(spi0, data, arg_int);
+      spi_write_blocking(DISPLAY_SPI_INSTANCE, data, arg_int);
       break;
     case U8X8_MSG_BYTE_INIT:
       u8x8_gpio_SetCS(u8x8, u8x8->display_info->chip_disable_level);
-      spi_init(spi0, (2.5e6));
+      spi_init(DISPLAY_SPI_INSTANCE, DISPLAY_SPI_SPEED);
       break;
     case U8X8_MSG_BYTE_SET_DC:
       u8x8_gpio_SetDC(u8x8, arg_int);

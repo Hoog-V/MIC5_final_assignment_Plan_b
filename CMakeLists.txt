@@ -47,7 +47,7 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
     if (NOT TARGET pico_cyw43_arch)
         message("Skipping build as support is not available")
     else ()
-        add_executable(people_counter "src/main.c")
+        add_executable(people_counter "src/main.c" "lib/pico-mfrc522/mfrc522.c")
         # enable usb output, disable uart output
         pico_enable_stdio_usb(people_counter 1)
         pico_enable_stdio_uart(people_counter 0)
@@ -55,6 +55,7 @@ if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
         target_include_directories(people_counter PUBLIC
                 ${CMAKE_CURRENT_LIST_DIR}/src
                 ${CMAKE_CURRENT_LIST_DIR}/src/display
+                ${CMAKE_CURRENT_LIST_DIR}/lib/pico-mfrc522/
         )
 
         # Select the heap port.  values between 1-4 will pick a heap.

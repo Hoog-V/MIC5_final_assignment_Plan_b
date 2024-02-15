@@ -26,11 +26,12 @@
 
 #include "math.h"
 #include "display_helper.h"
-
+#include "mfrc522.h"
 
 
 u8g2_t u8g2_inst;
 
+struct MFRC522_T mfrc_Instance;
 
 void led_task(void *arg)
 {
@@ -53,6 +54,21 @@ void led_task(void *arg)
 }
 
 
+MFRC522Ptr_t mfrc_inst;
+
+
+void wait_for_card_and_print() {
+        printf("Waiting for card\n\r");
+        while(!PICC_IsNewCardPresent(&mfrc_Instance));
+        //Select the card
+        printf("Selecting card\n\r");
+        PICC_ReadCardSerial(&mfrc_Instance);
+
+        //Show UID on serial monitor
+        printf("PICC dump: \n\r");
+        PICC_DumpToSerial(&mfrc_Instance, &(mfrc_Instance.uid));
+}
+
 int main()
 {
     stdio_init_all();
@@ -68,6 +84,10 @@ int main()
         return 1;
     }
 
+    for(uint8_t i =0; i< BUFFER_SIZE; i++) {
+        mfrc_Instance.Rx_Buf[i] = 0;
+        mfrc_Instance.Tx_Buf[i] = 0;
+    }
         
     gpio_set_function(DISPLAY_RST, GPIO_FUNC_SIO);
     gpio_set_dir(DISPLAY_RST, GPIO_OUT);
@@ -80,9 +100,15 @@ int main()
 
     gpio_set_function(DISPLAY_SCK, GPIO_FUNC_SPI);
     gpio_set_function(DISPLAY_MOSI, GPIO_FUNC_SPI);
+    gpio_set_function(RFID_MISO, GPIO_FUNC_SPI);
 
     gpio_set_function(DISPLAY_BL, GPIO_FUNC_PWM);
 
+    gpio_set_function(RFID_RST, GPIO_FUNC_SIO);
+    gpio_set_dir(RFID_RST, GPIO_OUT);
+
+    gpio_set_function(RFID_CS, GPIO_FUNC_SIO);
+    gpio_set_dir(RFID_CS, GPIO_OUT);
 
     display_init_backlight();
     display_set_backlight(100);
@@ -96,6 +122,8 @@ int main()
     u8g2_DrawStr(&u8g2_inst, 20, 20, "Test!");
     u8g2_SendBuffer(&u8g2_inst);
 
+    PCD_Init(&mfrc_Instance, spi1, RFID_RST, RFID_CS);
+    PCD_DumpVersionToSerial(&mfrc_Instance);
       int status = xTaskCreate(led_task, "Led blinky", 2048, NULL, 1, NULL);
      if(status != pdPASS) {
         while(1);
